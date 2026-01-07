@@ -1,9 +1,14 @@
+import os
+import re
+import openai
 from telegram import Update
 from telegram.ext import ApplicationBuilder, MessageHandler, filters, ContextTypes
-import openai
 
-openai.api_key = "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"
+# ---- Environment variables (safe for GitHub and Railway) ----
+openai.api_key = os.getenv("OPENAI_API_KEY")
+TELEGRAM_BOT_TOKEN = os.getenv("BOT_TOKEN")
 
+# ---- System prompt for the German tutor bot ----
 SYSTEM_PROMPT = """
 You are a friendly German language tutor.
 Your task is to help learners speak natural German.
@@ -14,8 +19,7 @@ Output format:
 📘 Explanation:
 """
 
-import re
-
+# ---- Handler function for Telegram messages ----
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_text = update.message.text
 
@@ -26,7 +30,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # ---- Input guard: check if text is German (basic check) ----
     # Looks for German letters: ä, ö, ü, ß or common German words
-    if not re.search(r"[äöüß]|(?:der|die|das|und|ist|ich|du|nicht|ein|eine)", user_text.lower()):
+    if not re.search(r"[äöüß]|(?:der|die|das|und|ist|ich|du|nicht|ein|eine|es|Sie|sie|mir|dir|Ihr|Ihnen|uns)", user_text.lower()):
         await update.message.reply_text("Bitte sende einen Satz auf Deutsch!")
         return
 
@@ -43,10 +47,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     reply = response.choices[0].message.content
     await update.message.reply_text(reply)
 
-
-    
-
-
-app = ApplicationBuilder().token("8500610410:AAE_DiW7lW71__8kSOIS_5zrUsyo8WqUk3g").build()
+# ---- Build and run Telegram bot ----
+app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
 app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 app.run_polling()
